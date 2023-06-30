@@ -9,21 +9,24 @@ antsMultivariateTemplateConstruction2=${ANTSSCRIPTSPATH}/antsMultivariateTemplat
 
 $antsMultivariateTemplateConstruction2 \
 -d 3 \
--o  $output_path$joint_type \
--i 2 \
--g 0.25 \
--j 4 \
--c 0 \
+-a 1 \
+-A 1 \
+-c 2 \
+-e 0 \
+-g 0.1 \
+-i 4 \
+-j 16 \
 -k 1 \
 -w 1 \
--n 1 \
+-q 4000x2000x1000x500x250 \
+-f 5x4x3x2x1 \
+-s 4x3x2x1x0vox \
+-n 0 \
 -r 1 \
--l 1 \
--m CC[2] \
--t BSplineSyN[0.25,26,0,3] \
--f 100x50 \
--s 8x4vox \
--q 2x1 \
+-l 0 \
+-m MI \
+-t SyN \
+-y 0 \
 ${input_path}/*.nii
 
 # $antsMultivariateTemplateConstruction \
