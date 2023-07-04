@@ -27,7 +27,7 @@ $antsMultivariateTemplateConstruction2 \
 -m MI \
 -t SyN \
 -y 0 \
-${input_path}/*.nii
+${input_path}/*.nii.gz 
 
 # $antsMultivariateTemplateConstruction \
 #   -d 3 \
