@@ -10,7 +10,6 @@ antsMultivariateTemplateConstruction2=${ANTSPATH}/antsMultivariateTemplateConstr
 $antsMultivariateTemplateConstruction2 \
 -d 3 \
 -a 1 \
--A 1 \
 -c 2 \
 -e 0 \
 -g 0.1 \
