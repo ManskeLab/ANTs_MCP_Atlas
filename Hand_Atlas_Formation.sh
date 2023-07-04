@@ -5,7 +5,7 @@ output_path=$2
 joint_type=$3
 
 # antsMultivariateTemplateConstruction=${ANTSSCRIPTSPATH}/antsMultivariateTemplateConstruction.sh
-antsMultivariateTemplateConstruction2=${ANTSSCRIPTSPATH}/antsMultivariateTemplateConstruction2.sh
+antsMultivariateTemplateConstruction2=${ANTSPATH}/antsMultivariateTemplateConstruction2.sh
 
 $antsMultivariateTemplateConstruction2 \
 -d 3 \
