@@ -17,11 +17,11 @@ input_path=$1
 iteration_limit=$2
 SEGMENTOR_SCRIPT=$3
 
-rm -r ${input_path}/TemplateFormation_0
-mkdir ${input_path}/TemplateFormation_0
+# rm -r ${input_path}/TemplateFormation_0
+# mkdir ${input_path}/TemplateFormation_0
 
 current_iter_dir=${input_path}
-current_output_dir=${input_path}/TemplateFormation_0
+current_output_dir=${input_path}
 
 echo $current_iter_dir
 AverageImages 3 ${current_output_dir}/avg.nii.gz 0 ${input_path}/*.nii
