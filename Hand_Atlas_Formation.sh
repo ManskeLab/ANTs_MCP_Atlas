@@ -31,6 +31,15 @@ Help()
     echo "c     OPTIONAL: Number of CPU cores to use. Default is 4."
     echo "n     Number of iterations to run template creation."
     echo "o     OPTIONAL: Output directory. Default is the input directory."
+    echo 
+    echo "Algorithm:"
+    echo "  1. Select initial template."
+    echo "  2. Register all images to template."
+    echo "  3. Average all warped images to create new template."
+    echo "  4. Average all transforms."
+    echo "  5. Apply transfrom to warped average." 
+    echo "  6. Apply Sharpening filter to image."
+    echo "  7. Repeat steps 2-6. for n iterations."
     echo
 }
 
@@ -86,14 +95,14 @@ done
 
 export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=$NUMBER_OF_CPU_CORES
 
-echo $current_iter_dir
-AverageImages 3 ${current_output_dir}/avg.nii.gz 0 ${input_path}/*.nii
-
-bash SEGMENTOR_SCRIPT -i ${current_output_dir}/avg.nii.gz -o $current_output_dir -b 1 -v 0
+CURRENT_ITER_DIR=$INPUT_DIR
 
 i=0
-while [[ $i -lt ${iteration_limit} ]]; do
-    for filename in $current_iter_dir/KRASL_.nii; do
+while [[ $i -lt $NUMBER_OF_ITERATION ]]; do
+    # Set directory to store incoming template resu
+    CURRENT_OUTPUT_DIR=$OUTPUT_DIR/Template_Iter_$i
+
+    for filename in $current_iter_dir/.nii; do
         filename=${filename##*/}
         echo $filename
 
