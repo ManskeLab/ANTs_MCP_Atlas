@@ -10,9 +10,6 @@
 ##SBATCH --mail-user=yousif.alkhoury@ucalgary.ca
 #SBATCH --output=OutputFromTemplateCreation.out
 
-# If running on Arc, uncomment below.
-# module load ants
-
 # Help                                                     #
 ############################################################
 Help()
@@ -27,11 +24,13 @@ Help()
     echo
     echo "options:"
     echo "h     OPTIONAL: Print this Help."
+    echo "a     OPTIONAL: Flag. Running on a cluster computer."
     echo "i     Path to input images."
-    echo "f     Path to initial template."
+    echo "f     Path to initial template. (.nii, nii.gz, nrrd, mha, dcm)"
     echo "m     OPTIONAL: Path to input masks."
-    echo "c     OPTIONAL: Number of CPU cores to use."
-    echo "o     OPTIONAL"
+    echo "c     OPTIONAL: Number of CPU cores to use. Default is 4."
+    echo "n     Number of iterations to run template creation."
+    echo "o     OPTIONAL: Output directory. Default is the input directory."
     echo
 }
 
@@ -43,39 +42,40 @@ Help()
 
 # Set variables
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-OUTPUT_DIR=$SCRIPT_DIR/Segmentation_results
-
+OUTPUT_DIR=$SCRIPT_DIR/Template_construction_results
+INPUT_MASKS_DIRECTORY=""
+NUMBER_OF_CPU_CORES=4
 
 ############################################################
 # Process the input options. Add options as needed.        #
 ############################################################
 # Get the options
-while getopts ":h:i:o:b:s:p:c:v:" option; do
+while getopts ":h:a:i:f:m:c:n:o" option; do
     case $option in
         h) # display Help
             Help
             exit
             ;;
-        i) # Enter a image path
-            IMAGE=$OPTARG
+        a) # Running on a cluster computer
+            module load ants
+            ;;
+        i) # Enter path to input directory
+            INPUT_DIR=$OPTARG
+            ;;
+        f) # Enter initial template image
+            INITIAL_TEMPLATE=$OPTARG
+            ;; 
+        m) # Enter path to input masks directory
+            INPUT_MASKS_DIRECTORY=$OPTARG
+            ;;
+        c) # Enter number of CPU cores
+            NUMBER_OF_CPU_CORES=$OPTARG
+            ;;
+        n)  #Enter number of iterations.
+            NUMBER_OF_ITERATION=$OPTARG
             ;;
         o) # Enter an output directory
-            OUTPUT_DIR=$OPTARG\Segmentation_Results_
-            ;;
-        b) # Number of bones to batch
-            BONE_PER_BATCH=$OPTARG
-            ;;
-        s) # Enter segmentor script location
-            SEGMENTOR_SCRIPT=$OPTARG
-            ;;
-        p) # Enter preproccessing script location
-            PREPROCESSING_SCRIPT=$OPTARG
-            ;;
-        p) # Enter mask combiner script location
-            MASK_COMBINER_SCRIPT=$OPTARG
-            ;;
-        v) # Debug flag
-            DEBUG_FLAG=$OPTARG
+            OUTPUT_DIR=$OPTARG\Template_construction_results
             ;;
         \?) # Invalid option
             echo "Error: Invalid option"
@@ -84,16 +84,7 @@ while getopts ":h:i:o:b:s:p:c:v:" option; do
    esac
 done
 
-
-input_path=$1
-iteration_limit=$2
-SEGMENTOR_SCRIPT=$3
-
-# rm -r ${input_path}/TemplateFormation_0
-# mkdir ${input_path}/TemplateFormation_0
-
-current_iter_dir=${input_path}
-current_output_dir=${input_path}
+export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=$NUMBER_OF_CPU_CORES
 
 echo $current_iter_dir
 AverageImages 3 ${current_output_dir}/avg.nii.gz 0 ${input_path}/*.nii
