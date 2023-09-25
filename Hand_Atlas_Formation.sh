@@ -12,14 +12,14 @@
 
 # Help                                                     #
 ############################################################
-Help()
+Help() 
 {
     # Display Help
     echo "Template creation script usinf ANTs"
     echo
     echo "Requirements:"
     echo "   Linux OS"
-    echo "  ANTs installation"
+    echo "   ANTs installation"
     echo "   High core CPU"
     echo
     echo "options:"
@@ -59,14 +59,14 @@ NUMBER_OF_CPU_CORES=4
 # Process the input options. Add options as needed.        #
 ############################################################
 # Get the options
-while getopts ":h:a:i:f:m:c:n:o" option; do
+while getopts ":hai:f:m:c:n:o" option; do
     case $option in
         h) # display Help
             Help
-            exit
             ;;
         a) # Running on a cluster computer
             module load ants
+            echo "ANTs loaded"
             ;;
         i) # Enter path to input directory
             INPUT_DIR=$OPTARG
@@ -93,16 +93,22 @@ while getopts ":h:a:i:f:m:c:n:o" option; do
    esac
 done
 
+rm -rf $OUTPUT_DIR
+mkdir $OUTPUT_DIR
+
 export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=$NUMBER_OF_CPU_CORES
 
 CURRENT_ITER_DIR=$INPUT_DIR
+CURRENT_TEMPLATE=$INITIAL_TEMPLATE
 
 i=0
 while [[ $i -lt $NUMBER_OF_ITERATION ]]; do
-    # Set directory to store incoming template resu
-    CURRENT_OUTPUT_DIR=$OUTPUT_DIR/Template_Iter_$i
+    # Set directory to store incoming template result
+    CURRENT_OUTPUT_DIR=$OUTPUT_DIR/Template_Iter_$i/
 
-    for filename in $current_iter_dir/.nii; do
+    mkdir $CURRENT_OUTPUT_DIR
+
+    for filename in $CURRENT_ITER_DIR/*.*; do
         filename=${filename##*/}
         echo $filename
 
@@ -111,18 +117,18 @@ while [[ $i -lt $NUMBER_OF_ITERATION ]]; do
         --dimensionality 3 \
         --float 0 \
         --collapse-output-transforms 1 \
-        --output [ $current_output_dir/,avg.nii.gz ] \
+        --output [ $CURRENT_OUTPUT_DIR/transform_${filename},$CURRENT_OUTPUT_DIR/${filename}.nii.gz ] \
         --interpolation BSpline[5] \
         --use-histogram-matching 0 \
         --winsorize-image-intensities [ 0.1,1 ] \
-        --initial-moving-transform [ ${current_output_dir}/avg.nii.gz, ${current_iter_dir}/$filename,2 ] \
+        --initial-moving-transform [ $CURRENT_TEMPLATE, $CURRENT_ITER_DIR/$filename,2 ] \
         --transform Rigid[0.1] \
-        --metric MI[${FIXED},${current_iter_dir}/$filename,1,32,Regular,0.25] \
+        --metric MI[$CURRENT_TEMPLATE,$CURRENT_ITER_DIR/$filename,1,32,Regular,0.25] \
         --convergence [ 1000x500x250x100,1e-6,10 ] \
         --shrink-factors 8x4x2x1 \
         --smoothing-sigmas 3x2x1x0vox \
         --transform Affine[0.1] \
-        --metric MI[${FIXED},${current_iter_dir}/$filename,1,32,Regular,0.25] \
+        --metric MI[$CURRENT_TEMPLATE,$CURRENT_ITER_DIR/$filename,1,32,Regular,0.25] \
         --convergence [ 1000x500x250x100,1e-6,10 ] \
         --shrink-factors 8x4x2x1 \
         --smoothing-sigmas 3x2x1x0vox 
@@ -133,9 +139,19 @@ while [[ $i -lt $NUMBER_OF_ITERATION ]]; do
         # --smoothing-sigmas 4x3x2x0vox \
         # --restrict-deformation 1x1x1 \
         # --masks [${current_output_dir}/COMBINED_MASK_avg.nii, ${current_iter_dir}/COMBINED_MASK_$filename]
-
-        bash SEGMENTOR_SCRIPT -i ${input_path}/avg.nii.gz -o $current_output_dir -b 1 -v 1
     done
+
+    AverageImages 3 $CURRENT_OUTPUT_DIR/Warped_Average.nii.gz 1 $CURRENT_OUTPUT_DIR/*.nii.gz
+
+    python $SCRIPT_DIR/MAT_Averager.py $CURRENT_OUTPUT_DIR $CURRENT_OUTPUT_DIR/Combined_Transform.mat
+
+    antsApplyTransforms \
+        -d 3 \
+        -i $CURRENT_OUTPUT_DIR/Warped_Average.nii.gz \
+        -t $CURRENT_OUTPUT_DIR/Combined_Transform.mat \
+        -o $CURRENT_OUTPUT_DIR/Template.nii.gz 
+    
+    CURRENT_TEMPLATE=$CURRENT_OUTPUT_DIR/Template.nii.gz 
+
     ((i++))
 done
-
